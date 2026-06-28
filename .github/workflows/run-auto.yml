@@ -26,3 +26,18 @@ jobs:
 
       - name: Execute Test
         run: ./gradlew test -Dheadless=true
+
+      - name: Archive Test Result
+        uses: actions/upload-artifact@v7.0.1
+        if: always() 
+        with: 
+          name: Cucumber Report 
+          path: target
+
+      - name: Deploy Report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4.1.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: target
+          
