@@ -25,4 +25,4 @@ jobs:
         run: chmod +x gradlew
 
       - name: Execute Test
-        run: ./gradlew test
+        run: ./gradlew test -Dheadless=true
