@@ -1,0 +1,82 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.saisyah'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+dependencies {
+
+    testImplementation 'org.seleniumhq.selenium:selenium-java:4.22.0'
+    testImplementation 'io.github.bonigarcia:webdrivermanager:5.8.0'
+
+    testImplementation 'io.cucumber:cucumber-java:7.15.0'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.15.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.junit.platform:junit-platform-suite:1.10.0'
+
+    testImplementation 'io.rest-assured:rest-assured:5.4.0'
+    testImplementation 'org.json:json:20240303'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+
+task apiTest(type: Test) {
+    group = 'verification'
+    description = 'Menjalankan semua test API'
+    useJUnitPlatform()
+    systemProperty "cucumber.filter.tags", "@api"
+    testLogging.showStandardStreams = true
+}
+
+task webTest(type: Test) {
+    group = 'verification'
+    description = 'Menjalankan semua test Web UI'
+    useJUnitPlatform()
+    systemProperty "cucumber.filter.tags", "@web"
+    testLogging.showStandardStreams = true
+}
+
+def tags = (findProperty('tags') == null) ? 'not @exclude' : findProperty('tags')
+
+task cucumber() {
+    group = 'verification'
+    description("Running Cucumber Automation via CLI")
+
+    dependsOn assemble, compileTestJava
+
+    doLast {
+        javaexec {
+            mainClass = "io.cucumber.core.cli.Main"
+
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+
+            args = [
+                    '--plugin', 'pretty',
+                    '--plugin', 'html:target/cucumber-reports/cucumber-report.html',
+                    '--plugin', 'json:target/cucumber-reports/cucumber-report.json',
+
+                    '--glue', 'hooks',
+                    '--glue', 'WebStepDefinitions',
+                    '--glue', 'APIStepDefinitions',
+
+                    '--tags', "${tags}",
+                    'src/test/resources'
+            ]
+        }
+    }
+}
